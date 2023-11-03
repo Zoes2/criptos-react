@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import styled from '@emotion/styled'
+import Error from './Error'
 import useSelectMonedas from '../hooks/useSelectMonedas'
 import { monedas } from '../data/monedas'
 
@@ -22,11 +23,15 @@ const InputSubmit = styled.input`
     }
 `
 
-const Formulario = () => {
+const Formulario = ({setMonedas}) => {
 
     const [criptos, setCriptos] = useState([])
+    const [error, setError] = useState(false)
 
-    const [ moneda, SelectMonedas ] = useSelectMonedas('Elige tu Moneda', monedas)
+
+    const [moneda, SelectMonedas] = useSelectMonedas('Elige tu Moneda', monedas)
+    const [criptomoneda, SelectCriptomoneda] = useSelectMonedas('Elige tu Criptomoneda', criptos)
+
 
     useEffect(() => {
         const consultarAPI = async () => {
@@ -34,7 +39,7 @@ const Formulario = () => {
             const respuesta = await fetch(url)
             const resultado = await respuesta.json()
 
-            const arrayCriptos = resultado.Data.map( cripto => {
+            const arrayCriptos = resultado.Data.map(cripto => {
 
                 const objeto = {
                     id: cripto.CoinInfo.Name,
@@ -47,21 +52,43 @@ const Formulario = () => {
         }
         consultarAPI()
     }, [])
-    
 
+
+    const handleSubmit = e => {
+        e.preventDefault()
+
+        if ([moneda, criptomoneda].includes('')) {
+            setError(true)
+
+            return
+        }
+
+        setError(false)
+        setMonedas({
+            moneda,
+            criptomoneda
+        })
+    }
 
     return (
-        <form>
+        <>
+            {error && <Error>Todos los campos son obligatorios </Error>}
 
-            <SelectMonedas />
+            <form
+                onSubmit={handleSubmit}
+            >
 
-            
+                <SelectMonedas />
+                <SelectCriptomoneda />
 
-            <InputSubmit
-                type="submit"
-                value='Cotizar'
-            />
-        </form>
+
+
+                <InputSubmit
+                    type="submit"
+                    value='Cotizar'
+                />
+            </form>
+        </>
     )
 }
 
